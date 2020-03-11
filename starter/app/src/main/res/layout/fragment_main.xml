@@ -7,6 +7,10 @@
             name="viewModel"
             type="com.udacity.asteroidradar.main.MainViewModel" />
 
+        <variable
+            name="viewModelStatic"
+            type="com.udacity.asteroidradar.main.MainViewModel.Companion" />
+
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -28,6 +32,8 @@
                 android:layout_height="match_parent"
                 android:adjustViewBounds="true"
                 android:scaleType="centerCrop"
+                android:contentDescription="@{viewModel.pictureOfDay.title}"
+                app:imageUrl="@{viewModel.pictureOfDay.url}"
                 app:srcCompat="@drawable/placeholder_picture_of_day"/>
 
             <TextView
@@ -40,6 +46,8 @@
                 android:textSize="20sp"
                 android:layout_gravity="bottom"
                 android:background="#55010613"
+                android:contentDescription="@string/image_of_the_day"
+
                 android:text="@string/image_of_the_day" />
         </FrameLayout>
 
@@ -47,13 +55,17 @@
             android:id="@+id/asteroid_recycler"
             android:layout_width="0dp"
             android:layout_height="0dp"
+            android:clipToPadding="true"
+
+
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/activity_main_image_of_the_day_layout"
-            app:layout_constraintVertical_bias="0.0" />
+            app:layout_constraintVertical_bias="0.0"
+            app:listData="@{viewModel.response}" />
 
         <ProgressBar
             android:id="@+id/status_loading_wheel"
@@ -61,9 +73,25 @@
             android:layout_height="wrap_content"
             android:indeterminate="true"
             android:visibility="gone"
+            android:contentDescription="@string/loading"
+            app:progressStatus="@{viewModelStatic.status}"
+
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/textView4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textColor="@android:color/white"
+
+            app:asteroidApiStatus="@{viewModelStatic.status}"
+            app:layout_constraintBottom_toBottomOf="@+id/asteroid_recycler"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/asteroid_recycler" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
