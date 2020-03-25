@@ -12,5 +12,15 @@ interface AsteroidDatabaseDao {
     fun bulkInsert(asteroids: List<DatabaseAsteroid>)
 
     @Query("SELECT * FROM DatabaseAsteroid where closeApproachDate> :timeNowInMillisMinusOneDay Order BY closeApproachDate ASC")
-    fun getAllAsteroids(timeNowInMillisMinusOneDay: Long): LiveData<List<DatabaseAsteroid>>
+    fun getWeekAsteroids(timeNowInMillisMinusOneDay: Long): LiveData<List<DatabaseAsteroid>>
+
+    @Query("SELECT * FROM DatabaseAsteroid where closeApproachDate> :timeNowInMillisMinusOneDay and closeApproachDate< :timeNowInMillis Order BY closeApproachDate ASC")
+    fun getTodaysAsteroids(
+        timeNowInMillisMinusOneDay: Long,
+        timeNowInMillis: Long
+    ): LiveData<List<DatabaseAsteroid>>
+
+    @Query("SELECT * FROM DatabaseAsteroid Order BY closeApproachDate ASC")
+    fun getAllAsteroids(): LiveData<List<DatabaseAsteroid>>
+
 }

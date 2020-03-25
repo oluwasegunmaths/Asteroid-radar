@@ -79,8 +79,10 @@ fun bindTextViewToDisplayVelocity(textView: TextView, number: Double) {
 
 @BindingAdapter("listData")
 fun bindRecyclerView(recyclerView: RecyclerView, data: List<Asteroid>?) {
+
     val adapter = recyclerView.adapter as AsteroidAdapter
     adapter.submitList(data)
+
 }
 
 @BindingAdapter("asteroidApiStatus")
@@ -88,23 +90,24 @@ fun bindStatus(statusTextView: TextView, status: MainViewModel.AsteroidApiStatus
     when (status) {
         MainViewModel.AsteroidApiStatus.LOADING -> {
             statusTextView.visibility = View.VISIBLE
-            statusTextView.text = "Loading asteroids"
+            statusTextView.text = statusTextView.context.getString(R.string.loading_asteroids)
             statusTextView.contentDescription = "Loading asteroids"
 
         }
         MainViewModel.AsteroidApiStatus.ERROR -> {
             statusTextView.visibility = View.VISIBLE
-            statusTextView.text = "Error loading asteroids"
+            statusTextView.text = statusTextView.context.getString(R.string.error_loading_asteroids)
             statusTextView.contentDescription = "Error loading asteroids"
 
         }
         MainViewModel.AsteroidApiStatus.DONE -> {
             statusTextView.visibility = View.GONE
 
+
         }
         MainViewModel.AsteroidApiStatus.NO_NETWORK -> {
             statusTextView.visibility = View.VISIBLE
-            statusTextView.text = "No network to load recent asteroids"
+            statusTextView.text = statusTextView.context.getString(R.string.no_network)
             statusTextView.contentDescription = "No network to load recent asteroids"
 
 

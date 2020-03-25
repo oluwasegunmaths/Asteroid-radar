@@ -20,7 +20,7 @@ class DownloadAsteroidWork(appContext: Context, params: WorkerParameters) :
 
         return try {
 
-            repository.refreshAsteroids()
+            repository.refreshAsteroids(true)
 
             Result.success()
         } catch (e: HttpException) {

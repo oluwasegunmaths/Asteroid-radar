@@ -15,6 +15,7 @@ import com.udacity.asteroidradar.api.getTodayFormattedDate
 import com.udacity.asteroidradar.api.parseAsteroidsJsonResult
 import com.udacity.asteroidradar.asDatabaseModel
 import com.udacity.asteroidradar.data.AsteroidDatabase
+import com.udacity.asteroidradar.data.DatabaseAsteroid
 import com.udacity.asteroidradar.data.asDomainModel
 import com.udacity.asteroidradar.main.MainViewModel
 import kotlinx.coroutines.*
@@ -29,29 +30,17 @@ class AsteroidRepository(
     private val context: Context
 ) {
     private var localDatabaseIsNotEmpty: Boolean = false
-
-    val asteroids: LiveData<List<Asteroid>> = Transformations.map(
-        database.asteroidDatabaseDao.getAllAsteroids(
-            Calendar.getInstance().timeInMillis - MILLIS_IN_A_DAY /* subtract milliseconds in a day to include today's asteroids in cursor returned by query */
-        )
-    ) {
-        if (it != null && it.isNotEmpty()) {
-            MainViewModel.status.value = MainViewModel.AsteroidApiStatus.DONE
-            localDatabaseIsNotEmpty = true
-        }
-        it.asDomainModel()
-
-    }
     private var job = Job()
 
     private val uiScope = CoroutineScope(job + Dispatchers.Main)
 
 
-    suspend fun refreshAsteroids() {
+    suspend fun refreshAsteroids(fromBackgroundWork: Boolean) {
 //        if getconnectiontype method returns 1 or 2, then there is network
         if (getConnectionType(context) != 0) {
             uiScope.launch {
-                if (!localDatabaseIsNotEmpty) {
+                if (!localDatabaseIsNotEmpty && !fromBackgroundWork) {
+
                     MainViewModel.status.value = MainViewModel.AsteroidApiStatus.LOADING
                 }
                 AsteroidApi.retrofitService.getAsteroids(
@@ -59,7 +48,7 @@ class AsteroidRepository(
                     Constants.API_KEY
                 ).enqueue(object : Callback<String> {
                     override fun onFailure(call: Call<String>, t: Throwable) {
-                        if (!localDatabaseIsNotEmpty) {
+                        if (!localDatabaseIsNotEmpty && !fromBackgroundWork) {
                             MainViewModel.status.value = MainViewModel.AsteroidApiStatus.ERROR
                         }
                     }
@@ -79,14 +68,16 @@ class AsteroidRepository(
                                 }
 
                             }
-                            MainViewModel.status.value = MainViewModel.AsteroidApiStatus.DONE
+                            if (!localDatabaseIsNotEmpty && !fromBackgroundWork) {
+                                MainViewModel.status.value = MainViewModel.AsteroidApiStatus.DONE
+                            }
                         }
                     }
                 })
 
             }
         } else {
-            if (!localDatabaseIsNotEmpty) {
+            if (!localDatabaseIsNotEmpty && !fromBackgroundWork) {
                 MainViewModel.status.value = MainViewModel.AsteroidApiStatus.NO_NETWORK
             }
         }
@@ -147,5 +138,48 @@ class AsteroidRepository(
             }
         }
         return result
+    }
+
+    fun getAsteroidsByFilter(filter: MainViewModel.AsteroidFilter): LiveData<List<Asteroid>> {
+
+        return Transformations.map(
+            when (filter) {
+                MainViewModel.AsteroidFilter.SHOW_WEEK -> getThisWeeksAsteroidListLiveData()
+                MainViewModel.AsteroidFilter.SHOW_TODAY -> getTodaysAsteroidListLiveData()
+                else -> getAllAsteroidListLiveData()
+            }
+        ) {
+
+            if (it != null && it.isNotEmpty()) {
+
+                MainViewModel.status.value = MainViewModel.AsteroidApiStatus.DONE
+                localDatabaseIsNotEmpty = true
+
+            }
+
+            it.asDomainModel()
+
+        }
+
+    }
+
+    private fun getAllAsteroidListLiveData(): LiveData<List<DatabaseAsteroid>> {
+
+        return database.asteroidDatabaseDao.getAllAsteroids()
+    }
+
+    private fun getThisWeeksAsteroidListLiveData(): LiveData<List<DatabaseAsteroid>> {
+
+        return database.asteroidDatabaseDao.getWeekAsteroids(
+            Calendar.getInstance().timeInMillis - MILLIS_IN_A_DAY /* subtract milliseconds in a day to include today's asteroids in cursor returned by query */
+        )
+    }
+
+    private fun getTodaysAsteroidListLiveData(): LiveData<List<DatabaseAsteroid>> {
+
+        return database.asteroidDatabaseDao.getTodaysAsteroids(
+            Calendar.getInstance().timeInMillis - MILLIS_IN_A_DAY /* subtract milliseconds in a day to include today's asteroids in cursor returned by query */,
+            Calendar.getInstance().timeInMillis
+        )
     }
 }
